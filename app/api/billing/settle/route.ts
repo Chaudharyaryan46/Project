@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const results = await prisma.$transaction(async (tx) => {
       const orders = await tx.order.findMany({
         where: { id: { in: orderIds } },
-        include: { 
+        include: {
           items: {
             include: {
               item: {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
                 }
               }
             }
-          } 
+          }
         }
       });
 
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
       let activeCustomerId = null;
       if (customerPhone) {
-        const hId = hotelId || 'SFB-99';
+        const hId = hotelId || 'cmnrp3c210000133y8972ejla';
         let customer = await tx.customer.findUnique({
           where: {
             phone_hotelId: {
@@ -56,10 +56,10 @@ export async function POST(req: NextRequest) {
       const transactions = await Promise.all(orders.map(async (order) => {
         // Calculate the actual order total from items for data integrity
         const actualOrderTotal = order.items.reduce((sum: number, oi: any) => sum + (oi.price * oi.quantity), 0);
-        
+
         // Calculate tax for this specific order (5% GST as per requirement)
         const gstAmount = actualOrderTotal * 0.05;
-        
+
         // Check if a transaction already exists for this orderId to avoid unique constraint violation
         const existingTx = await tx.transaction.findUnique({
           where: { orderId: order.id }
@@ -85,9 +85,9 @@ export async function POST(req: NextRequest) {
           data: {
             orderId: order.id,
             hotelId: hotelId || order.hotelId,
-            amount: actualOrderTotal + gstAmount, 
+            amount: actualOrderTotal + gstAmount,
             gstAmount: gstAmount,
-            discount: discount / orders.length, 
+            discount: discount / orders.length,
             loyaltyPointsRedeemed: 0,
             loyaltyPointsEarned: finalPointsEarned,
             paymentMethod: paymentMethod || 'Cash',
@@ -98,29 +98,29 @@ export async function POST(req: NextRequest) {
 
         // If customer is attached, update their points
         if (activeCustomerId) {
-            await tx.customer.update({
-                where: { id: activeCustomerId },
-                data: {
-                    pointsBalance: { 
-                        increment: finalPointsEarned
-                    },
-                    totalPointsEarned: { increment: finalPointsEarned }
-                }
-            });
-
-            if (finalPointsEarned > 0) {
-                await tx.loyaltyTransaction.create({
-                    data: {
-                        customerId: activeCustomerId,
-                        hotelId: hotelId || order.hotelId,
-                        type: 'EARN',
-                        points: finalPointsEarned,
-                        rupeeValue: finalPointsEarned,
-                        orderId: order.id,
-                        description: `Points earned on bill`
-                    }
-                });
+          await tx.customer.update({
+            where: { id: activeCustomerId },
+            data: {
+              pointsBalance: {
+                increment: finalPointsEarned
+              },
+              totalPointsEarned: { increment: finalPointsEarned }
             }
+          });
+
+          if (finalPointsEarned > 0) {
+            await tx.loyaltyTransaction.create({
+              data: {
+                customerId: activeCustomerId,
+                hotelId: hotelId || order.hotelId,
+                type: 'EARN',
+                points: finalPointsEarned,
+                rupeeValue: finalPointsEarned,
+                orderId: order.id,
+                description: `Points earned on bill`
+              }
+            });
+          }
         }
         return txRecord;
       }));

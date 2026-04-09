@@ -20,13 +20,13 @@ export async function POST(req: NextRequest) {
     const context = await getTenantContext();
     const body = await req.json();
     const validation = orderSchema.safeParse(body);
-    
+
     if (!validation.success) {
       return NextResponse.json({ error: 'Invalid input data', details: validation.error.format() }, { status: 400 });
     }
 
     const { tableId, items, hotelId: bodyHotelId } = validation.data;
-    const hotelId = context?.hotelId || bodyHotelId || 'SFB-99';
+    const hotelId = context?.hotelId || bodyHotelId || 'cmnrp3c210000133y8972ejla';
 
     // Verify table belongs to the hotel
     const table = await prisma.table.findFirst({
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
   try {
     const context = await getTenantContext();
     const { searchParams } = new URL(req.url);
-    const hotelId = context?.hotelId || searchParams.get('hotelId') || 'SFB-99';
+    const hotelId = context?.hotelId || searchParams.get('hotelId') || 'cmnrp3c210000133y8972ejla';
 
     const orders = await prisma.order.findMany({
       where: { hotelId },

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const hotelId = searchParams.get('hotelId') || 'SFB-99';
+    const hotelId = searchParams.get('hotelId') || 'cmnrp3c210000133y8972ejla';
 
     const activeShift = await prisma.shift.findFirst({
       where: {
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { hotelId = 'SFB-99' } = body;
+    const { hotelId = 'cmnrp3c210000133y8972ejla' } = body;
 
     // Check if there is already an open shift
     const existingShift = await prisma.shift.findFirst({
